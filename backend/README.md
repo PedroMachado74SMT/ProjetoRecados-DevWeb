@@ -1,16 +1,19 @@
-# 📌 Cadastro e Lista de Recados
+# 📌 Projeto Recados
 
-Projeto desenvolvido para a disciplina de Desenvolvimento Web III (FATEC).
+Projeto Full Stack desenvolvido para a disciplina de Desenvolvimento Web III da FATEC.
+
+O sistema permite o cadastro de usuários e o gerenciamento de recados utilizando uma API desenvolvida em Laravel e um Front-end em React.
 
 ---
 
-# Tecnologias
+# 🛠 Tecnologias Utilizadas
 
 ## Front-end
 
 - React
 - Vite
 - Axios
+- React Router DOM
 
 ## Back-end
 
@@ -24,41 +27,38 @@ Projeto desenvolvido para a disciplina de Desenvolvimento Web III (FATEC).
 
 ---
 
-# Estrutura do Projeto
+# 📂 Estrutura do Projeto
 
 ```
 ProjetoRecados/
-
 │
-
-├── frontend/
-
 ├── backend/
-
+├── frontend/
 └── README.md
 ```
 
 ---
 
-# Pré-requisitos
+# 📋 Pré-requisitos
 
-Antes de iniciar, é necessário ter instalado:
+Antes de executar o projeto é necessário possuir instalado:
 
-- Node.js 20+
-- PHP 8.2 ou superior
+- PHP 8.5 ou superior
 - Composer
-- MySQL
+- Node.js
+- npm
+- MySQL (XAMPP ou MySQL Server)
 - Git
 
 ---
 
-# Clonar o projeto
+# 📥 Clonando o Projeto
 
 ```bash
 git clone https://github.com/SEU-USUARIO/ProjetoRecados.git
 ```
 
-Entre na pasta:
+Entre na pasta do projeto:
 
 ```bash
 cd ProjetoRecados
@@ -66,7 +66,19 @@ cd ProjetoRecados
 
 ---
 
-# Configurando o Backend
+# ⚙️ Configuração do Banco de Dados
+
+1. Inicie o MySQL.
+
+2. Crie um banco de dados chamado:
+
+```
+recados
+```
+
+---
+
+# ⚙️ Configuração do Backend
 
 Entre na pasta:
 
@@ -80,41 +92,16 @@ Instale as dependências:
 composer install
 ```
 
-Crie o arquivo .env:
-
-Windows
-
-```cmd
-copy .env.example .env
-```
-
-Linux/Mac
-
-```bash
-cp .env.example .env
-```
-
-Edite o arquivo `.env` e configure o banco de dados:
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=recados
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-Gere a chave da aplicação:
-
-```bash
-php artisan key:generate
-```
-
 Execute as migrations:
 
 ```bash
 php artisan migrate
+```
+
+Caso seja necessário instalar as rotas da API:
+
+```bash
+php artisan install:api
 ```
 
 Inicie o servidor:
@@ -123,7 +110,7 @@ Inicie o servidor:
 php artisan serve
 ```
 
-O backend estará disponível em:
+O backend ficará disponível em:
 
 ```
 http://127.0.0.1:8000
@@ -131,7 +118,7 @@ http://127.0.0.1:8000
 
 ---
 
-# Configurando o Frontend
+# ⚛️ Configuração do Front-end
 
 Abra outro terminal.
 
@@ -147,13 +134,13 @@ Instale as dependências:
 npm install
 ```
 
-Execute:
+Execute o projeto:
 
 ```bash
 npm run dev
 ```
 
-O frontend estará disponível em:
+O Front-end ficará disponível em:
 
 ```
 http://localhost:5173
@@ -161,79 +148,74 @@ http://localhost:5173
 
 ---
 
-# Funcionalidades
+# ✨ Funcionalidades
 
-enquanto eu escrevo isso tem mais ou menos.
+## Usuários
 
 - Cadastro de usuário
 - Login
 - Logout
+- Autenticação com Laravel Sanctum
 - Rotas protegidas
-- Listagem de recados
+
+## Recados
+
 - Cadastro de recados
+- Listagem de recados
 - Exclusão de recados
 
 ---
 
-# API
+# 🔗 Rotas da API
 
-## Autenticação
+## Usuários
 
-POST
-
-```
-/api/register
-```
-
-POST
-
-```
-/api/login
-```
-
-POST
-
-```
-/api/logout
-```
-
----
+| Método | Rota |
+|---------|------|
+| POST | /api/register |
+| POST | /api/login |
+| POST | /api/logout |
 
 ## Recados
 
-GET
+| Método | Rota |
+|---------|------|
+| GET | /api/recados |
+| POST | /api/recados |
+| DELETE | /api/recados/{id} |
 
-```
-/api/recados
-```
+---
 
-POST
+# 🔐 Autenticação
 
-```
-/api/recados
-```
+A autenticação é realizada utilizando **Laravel Sanctum**.
 
-DELETE
+Após o login, a API retorna um Token que deve ser enviado nas requisições protegidas.
 
-```
-/api/recados/{id}
+Header:
+
+```http
+Authorization: Bearer SEU_TOKEN
 ```
 
 ---
 
-# Integrantes
+# ▶️ Primeira Execução
 
-- Nome Maria Eduarda Silva Rocha
-- Nome Pedro Henrique Machado Mantovani
+1. Inicie o MySQL.
+2. Crie o banco `recados`.
+3. Execute `composer install`.
+4. Execute `php artisan migrate`.
+5. Execute `php artisan serve`.
+6. Execute `npm install`.
+7. Execute `npm run dev`.
+8. Cadastre um usuário.
+9. Faça login.
+10. Utilize normalmente o sistema.
 
 ---
 
-# Observações
+# 👨‍💻 Integrantes
 
-Caso o projeto seja executado pela primeira vez:
-
-1. Configure o banco MySQL.
-2. Execute as migrations.
-3. Faça um cadastro.
-4. Faça login.
-5. Utilize normalmente o sistema.
+- Maria Eduarda Silva Rocha
+- Pedro Henrique Machado Mantovani

@@ -1,11 +1,6 @@
 # Logs
 *.log
 
-# Ambiente
-.env
-.env.backup
-.env.production
-
 # Dependências
 /vendor
 /node_modules
