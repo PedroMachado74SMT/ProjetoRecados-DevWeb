@@ -163,7 +163,7 @@ http://localhost:5173
 
 # Funcionalidades
 
-enquanto eu escrevo isso ainda não tem
+enquanto eu escrevo isso tem mais ou menos.
 
 - Cadastro de usuário
 - Login
