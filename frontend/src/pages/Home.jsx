@@ -10,6 +10,7 @@ export default function Home() {
     const [titulo, setTitulo] = useState("");
     const [descricao, setDescricao] = useState("");
     const [loading, setLoading] = useState(false);
+    const [editandoId, setEditandoId] = useState(null);
 
     const token = localStorage.getItem("token");
 
@@ -70,6 +71,46 @@ export default function Home() {
             console.error(error);
             alert("Erro ao criar recado");
         }
+    }
+
+    //editar recado
+    async function editarRecado() {
+     if (!titulo || !descricao) {
+        alert("Preencha título e descrição");
+        return;
+    }
+
+    try {
+
+        await Api.put(
+            `/recados/${editandoId}`,
+            {
+                titulo,
+                descricao
+            },
+            authHeaders
+        );
+
+        setTitulo("");
+        setDescricao("");
+        setEditandoId(null);
+
+        await carregarRecados();
+
+    } catch (error) {
+
+        console.error(error);
+        alert("Erro ao editar recado");
+
+     }
+   }
+
+    function iniciarEdicao(recado) {
+
+      setTitulo(recado.titulo);
+      setDescricao(recado.descricao);
+      setEditandoId(recado.id);
+
     }
 
     // DELETAR recado
@@ -136,7 +177,7 @@ export default function Home() {
             />
 
             <button
-                onClick={criarRecado}
+                onClick={editandoId ? editarRecado: criarRecado}
                 style={{
                     marginTop: 10,
                     padding: 10,
@@ -147,7 +188,7 @@ export default function Home() {
                     borderRadius: 6,
                 }}
             >
-                Adicionar Recado
+              {editandoId ? "Salvar Alterações" : "Adicionar Recado"}
             </button>
 
             <hr style={{ margin: "20px 0" }} />
@@ -170,6 +211,21 @@ export default function Home() {
                     >
                         <h3>{recado.titulo}</h3>
                         <p>{recado.descricao}</p>
+
+                        <button
+                          onClick={() => iniciarEdicao(recado)}
+                           style={{
+                             marginTop: 5,
+                             marginRight: 10,
+                             background: "#3498db",
+                             color: "white",
+                             border: "none",
+                             padding: 6,
+                             borderRadius: 5,
+                              }}
+                                  >
+                                Editar
+                        </button>
 
                         <button
                             onClick={() => deletarRecado(recado.id)}
