@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Api from "../services/Api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
 
@@ -29,13 +29,10 @@ export default function Login() {
         } catch (erro) {
 
             alert("E-mail ou senha inválidos.");
-
         }
-
     }
 
     return (
-
         <div>
 
             <h1>Login</h1>
@@ -64,8 +61,14 @@ export default function Login() {
 
             </form>
 
+            
+            <p style={{ marginTop: 15 }}>
+                Não tem conta?{" "}
+                <Link to="/register" style={{ color: "blue" }}>
+                    Criar conta
+                </Link>
+            </p>
+
         </div>
-
     );
-
 }
