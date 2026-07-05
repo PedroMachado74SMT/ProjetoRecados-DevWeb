@@ -35,9 +35,45 @@ class RecadoController extends Controller
         ], 201);
     }
 
-    public function destroy($id)
+    public function update(Request $request, $id)
     {
-        $recado = Recado::findOrFail($id);
+        $request->validate([
+            'titulo' => 'required|max:255',
+            'descricao' => 'required'
+        ]);
+
+        $recado = Recado::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$recado) {
+            return response()->json([
+                'message' => 'Recado não encontrado.'
+            ], 404);
+        }
+
+        $recado->update([
+            'titulo' => $request->titulo,
+            'descricao' => $request->descricao
+        ]);
+
+        return response()->json([
+            'message' => 'Recado atualizado com sucesso.',
+            'recado' => $recado
+        ]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $recado = Recado::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$recado) {
+            return response()->json([
+                'message' => 'Recado não encontrado.'
+            ], 404);
+        }
 
         $recado->delete();
 
