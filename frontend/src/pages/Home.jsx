@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Api from "../services/Api";
+import "./Home.css";
 
 export default function Home() {
-
     const navigate = useNavigate();
 
     const [recados, setRecados] = useState([]);
@@ -12,43 +12,67 @@ export default function Home() {
     const [loading, setLoading] = useState(false);
     const [editandoId, setEditandoId] = useState(null);
 
-    const token = localStorage.getItem("token");
+    const [temperatura, setTemperatura] = useState(null);
+    const [climaLoading, setClimaLoading] = useState(true);
 
-    // proteção de rota
-    useEffect(() => {
-        if (!token) {
+    async function verificarLogin() {
+        try {
+            await Api.get("/user");
+            carregarRecados();
+            carregarClima();
+        } catch (error) {
             navigate("/");
         }
-    }, []);
+    }
 
-    const authHeaders = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    };
-    
-    function logout() {
-    localStorage.removeItem("token");
-    navigate("/");
-}
+    async function carregarClima() {
+        try {
+            setClimaLoading(true);
 
-    // carregar os recado
+            const response = await fetch(
+                "https://api.open-meteo.com/v1/forecast?latitude=-22.8375&longitude=-47.2669&current=temperature_2m,weather_code&timezone=America%2FSao_Paulo"
+            );
+
+            const data = await response.json();
+
+            setTemperatura(data.current.temperature_2m);
+        } catch (error) {
+            console.error("Erro ao carregar clima:", error);
+        } finally {
+            setClimaLoading(false);
+        }
+    }
+
+    async function logout() {
+        try {
+            await Api.post("/logout");
+        } catch (error) {
+            console.error(error);
+        }
+
+        navigate("/");
+    }
+
     async function carregarRecados() {
         try {
             setLoading(true);
 
-            const response = await Api.get("/recados", authHeaders);
+            const response = await Api.get("/recados");
 
             setRecados(response.data);
         } catch (error) {
             console.error(error);
-            alert("Erro ao carregar recados");
+
+            if (error.response?.status === 401) {
+                navigate("/");
+            } else {
+                alert("Erro ao carregar recados");
+            }
         } finally {
             setLoading(false);
         }
     }
 
-    // CRIAR recado
     async function criarRecado() {
         if (!titulo || !descricao) {
             alert("Preencha título e descrição");
@@ -56,67 +80,53 @@ export default function Home() {
         }
 
         try {
-            await Api.post(
-                "/recados",
-                { titulo, descricao },
-                authHeaders
-            );
+            await Api.post("/recados", {
+                titulo,
+                descricao
+            });
 
             setTitulo("");
             setDescricao("");
 
             await carregarRecados();
-
         } catch (error) {
             console.error(error);
             alert("Erro ao criar recado");
         }
     }
 
-    //editar recado
     async function editarRecado() {
-     if (!titulo || !descricao) {
-        alert("Preencha título e descrição");
-        return;
-    }
+        if (!titulo || !descricao) {
+            alert("Preencha título e descrição");
+            return;
+        }
 
-    try {
-
-        await Api.put(
-            `/recados/${editandoId}`,
-            {
+        try {
+            await Api.put(`/recados/${editandoId}`, {
                 titulo,
                 descricao
-            },
-            authHeaders
-        );
+            });
 
-        setTitulo("");
-        setDescricao("");
-        setEditandoId(null);
+            setTitulo("");
+            setDescricao("");
+            setEditandoId(null);
 
-        await carregarRecados();
-
-    } catch (error) {
-
-        console.error(error);
-        alert("Erro ao editar recado");
-
-     }
-   }
-
-    function iniciarEdicao(recado) {
-
-      setTitulo(recado.titulo);
-      setDescricao(recado.descricao);
-      setEditandoId(recado.id);
-
+            await carregarRecados();
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao editar recado");
+        }
     }
 
-    // DELETAR recado
+    function iniciarEdicao(recado) {
+        setTitulo(recado.titulo);
+        setDescricao(recado.descricao);
+        setEditandoId(recado.id);
+    }
+
     async function deletarRecado(id) {
         try {
-            await Api.delete(`/recados/${id}`, authHeaders);
+            await Api.delete(`/recados/${id}`);
 
             setRecados((prev) =>
                 prev.filter((recado) => recado.id !== id)
@@ -128,121 +138,140 @@ export default function Home() {
     }
 
     useEffect(() => {
-        carregarRecados();
+        verificarLogin();
     }, []);
 
     return (
+        <div className="home-container">
+            <div className="home-header">
+                <div>
+                    <h1>Meus Recados</h1>
+                    <p className="subtitle">
+                        Organize seus lembretes de forma simples.
+                    </p>
+                </div>
 
-        
-        <div
-            style={{
-                maxWidth: 600,
-                margin: "0 auto",
-                fontFamily: "Arial",
-            }}
-        >
-            <h1>Meus Recados</h1>
+                <button className="logout-button" onClick={logout}>
+                    Sair
+                </button>
+            </div>
+
+            <div className="weather-card">
+                <div>
+                    <h3>Clima atual</h3>
+
+                    {climaLoading ? (
+                        <p>Carregando clima...</p>
+                    ) : temperatura !== null ? (
+                        <p className="temperature">
+                            🌤️ Sumaré: {temperatura}°C
+                        </p>
+                    ) : (
+                        <p>Não foi possível carregar o clima.</p>
+                    )}
+                </div>
+            </div>
+
+            <div className="form-card">
+                <h2>
+                    {editandoId ? "Editar recado" : "Novo recado"}
+                </h2>
+
+                <input
+                    className="input"
+                    placeholder="Título"
+                    value={titulo}
+                    onChange={(e) => setTitulo(e.target.value)}
+                />
+
+                <textarea
+                    className="input textarea"
+                    placeholder="Descrição"
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value)}
+                />
+
                 <button
-    onClick={logout}
-    style={{
-        marginBottom: 15,
-        padding: "8px 14px",
-        background: "#e74c3c",
-        color: "white",
-        border: "none",
-        borderRadius: 8,
-        cursor: "pointer",
-        fontWeight: "bold",
-        transition: "0.2s",
-    }}
-    onMouseOver={(e) => (e.target.style.background = "#c0392b")}
-    onMouseOut={(e) => (e.target.style.background = "#e74c3c")}
-                                >
-                        Sair
+                    className="primary-button"
+                    onClick={editandoId ? editarRecado : criarRecado}
+                >
+                    {editandoId
+                        ? "Salvar Alterações"
+                        : "Adicionar Recado"}
                 </button>
 
-            
-            <input
-                style={{ width: "100%", padding: 8, marginBottom: 10 }}
-                placeholder="Título"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-            />
-
-            <textarea
-                style={{ width: "100%", padding: 8 }}
-                placeholder="Descrição"
-                value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
-            />
-
-            <button
-                onClick={editandoId ? editarRecado: criarRecado}
-                style={{
-                    marginTop: 10,
-                    padding: 10,
-                    width: "100%",
-                    background: "#4CAF50",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 6,
-                }}
-            >
-              {editandoId ? "Salvar Alterações" : "Adicionar Recado"}
-            </button>
-
-            <hr style={{ margin: "20px 0" }} />
-
-            
-            {loading ? (
-                <p>Carregando...</p>
-            ) : recados.length === 0 ? (
-                <p>Nenhum recado encontrado.</p>
-            ) : (
-                recados.map((recado) => (
-                    <div
-                        key={recado.id}
-                        style={{
-                            border: "1px solid #ddd",
-                            padding: 12,
-                            borderRadius: 8,
-                            marginBottom: 10,
+                {editandoId && (
+                    <button
+                        className="cancel-button"
+                        onClick={() => {
+                            setTitulo("");
+                            setDescricao("");
+                            setEditandoId(null);
                         }}
                     >
-                        <h3>{recado.titulo}</h3>
-                        <p>{recado.descricao}</p>
+                        Cancelar edição
+                    </button>
+                )}
+            </div>
 
-                        <button
-                          onClick={() => iniciarEdicao(recado)}
-                           style={{
-                             marginTop: 5,
-                             marginRight: 10,
-                             background: "#3498db",
-                             color: "white",
-                             border: "none",
-                             padding: 6,
-                             borderRadius: 5,
-                              }}
-                                  >
-                                Editar
-                        </button>
+            <div className="recados-section">
+                <div className="section-header">
+                    <h2>Seus recados</h2>
+                    <span className="recados-count">
+                        {recados.length}
+                    </span>
+                </div>
 
-                        <button
-                            onClick={() => deletarRecado(recado.id)}
-                            style={{
-                                marginTop: 5,
-                                background: "red",
-                                color: "white",
-                                border: "none",
-                                padding: 6,
-                                borderRadius: 5,
-                            }}
-                        >
-                            Excluir
-                        </button>
+                {loading ? (
+                    <p className="message">Carregando...</p>
+                ) : recados.length === 0 ? (
+                    <p className="message">
+                        Nenhum recado encontrado.
+                    </p>
+                ) : (
+                    <div className="recados-list">
+                        {recados.map((recado) => (
+                            <div
+                                className="recado-card"
+                                key={recado.id}
+                            >
+                                <h3>{recado.titulo}</h3>
+
+                                <p className="recado-descricao">
+                                    {recado.descricao}
+                                </p>
+
+                                <small className="recado-data">
+                                    Criado em:{" "}
+                                    {new Date(
+                                        recado.created_at
+                                    ).toLocaleString("pt-BR")}
+                                </small>
+
+                                <div className="recado-actions">
+                                    <button
+                                        className="edit-button"
+                                        onClick={() =>
+                                            iniciarEdicao(recado)
+                                        }
+                                    >
+                                        Editar
+                                    </button>
+
+                                    <button
+                                        className="delete-button"
+                                        onClick={() =>
+                                            deletarRecado(recado.id)
+                                        }
+                                    >
+                                        Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                ))
-            )}
+                )}
+            </div>
         </div>
     );
 }

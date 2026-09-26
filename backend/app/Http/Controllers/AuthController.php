@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -23,11 +24,12 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        Auth::login($user);
+
+        $request->session()->regenerate();
 
         return response()->json([
             'message' => 'Usuário cadastrado com sucesso!',
-            'token' => $token,
             'user' => $user
         ], 201);
     }
@@ -40,29 +42,29 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $credentials = $request->only('email', 'password');
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-
+        if (!Auth::attempt($credentials)) {
             return response()->json([
                 'message' => 'E-mail ou senha inválidos.'
             ], 401);
-
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $request->session()->regenerate();
 
         return response()->json([
             'message' => 'Login realizado!',
-            'token' => $token,
-            'user' => $user
+            'user' => Auth::user()
         ]);
     }
 
     // Logout
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json([
             'message' => 'Logout realizado.'
