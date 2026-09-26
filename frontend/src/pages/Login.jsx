@@ -15,18 +15,20 @@ export default function Login() {
 
         try {
 
-            const resposta = await Api.post("/login", {
+            await Api.get("http://localhost:8000/sanctum/csrf-cookie");
+
+            await Api.post("/login", {
                 email,
                 password,
             });
-
-            localStorage.setItem("token", resposta.data.token);
 
             alert("Login realizado!");
 
             navigate("/home");
 
         } catch (erro) {
+
+            console.error(erro);
 
             alert("E-mail ou senha inválidos.");
         }
@@ -61,7 +63,6 @@ export default function Login() {
 
             </form>
 
-            
             <p style={{ marginTop: 15 }}>
                 Não tem conta?{" "}
                 <Link to="/register" style={{ color: "blue" }}>
