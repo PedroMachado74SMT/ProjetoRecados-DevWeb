@@ -29,4 +29,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/recados/{id}/anexo', [RecadoController::class, 'downloadAnexo']);
 
+    // Administração
+    Route::middleware('admin')->group(function () {
+
+        Route::get('/admin/recados', [RecadoController::class, 'adminIndex']);
+
+    });
+
 });

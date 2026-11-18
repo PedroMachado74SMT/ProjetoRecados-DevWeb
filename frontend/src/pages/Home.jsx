@@ -20,11 +20,13 @@ export default function Home() {
     const [climaLoading, setClimaLoading] = useState(true);
 
     const [verificandoLogin, setVerificandoLogin] = useState(true);
+    const [usuario, setUsuario] = useState(null);
 
     async function verificarLogin() {
         try {
-            await Api.get("/user");
+            const response = await Api.get("/user");
 
+            setUsuario(response.data);
             setVerificandoLogin(false);
 
             carregarRecados();
@@ -65,6 +67,7 @@ export default function Home() {
             await Api.post("/logout");
 
             setRecados([]);
+            setUsuario(null);
             limparFormulario();
             setVerificandoLogin(true);
 
@@ -273,7 +276,9 @@ export default function Home() {
 
     return (
         <div className="home-container">
+
             <div className="home-header">
+
                 <div>
                     <h1>Meus Recados</h1>
                     <p className="subtitle">
@@ -281,9 +286,26 @@ export default function Home() {
                     </p>
                 </div>
 
-                <button className="logout-button" onClick={logout}>
-                    Sair
-                </button>
+                <div style={{ display: "flex", gap: "10px" }}>
+
+                    {usuario?.role === "admin" && (
+                        <button
+                            className="primary-button"
+                            onClick={() => navigate("/admin")}
+                        >
+                            Administração
+                        </button>
+                    )}
+
+                    <button
+                        className="logout-button"
+                        onClick={logout}
+                    >
+                        Sair
+                    </button>
+
+                </div>
+
             </div>
 
             <div className="weather-card">

@@ -132,26 +132,42 @@ class RecadoController extends Controller
 
     // Download do anexo
     public function downloadAnexo(Request $request, $id)
+{
+    $recado = Recado::find($id);
+
+    if (!$recado || !$recado->anexo) {
+        return response()->json([
+            'message' => 'Anexo não encontrado.'
+        ], 404);
+    }
+
+    if (
+        !$request->user()->isAdmin() &&
+        $recado->user_id != $request->user()->id
+    ) {
+        return response()->json([
+            'message' => 'Acesso negado.'
+        ], 403);
+    }
+
+    if (!Storage::disk('local')->exists($recado->anexo)) {
+        return response()->json([
+            'message' => 'Arquivo não encontrado.'
+        ], 404);
+    }
+
+    return Storage::disk('local')->download(
+        $recado->anexo,
+        $recado->anexo_nome
+    );
+}
+    // Listar todos os recados (administrador)
+    public function adminIndex()
     {
-        $recado = Recado::where('id', $id)
-            ->where('user_id', $request->user()->id)
-            ->first();
+    $recados = Recado::with('user:id,name,email')
+        ->latest()
+        ->get();
 
-        if (!$recado || !$recado->anexo) {
-            return response()->json([
-                'message' => 'Anexo não encontrado.'
-            ], 404);
-        }
-
-        if (!Storage::disk('local')->exists($recado->anexo)) {
-            return response()->json([
-                'message' => 'Arquivo não encontrado.'
-            ], 404);
-        }
-
-        return Storage::disk('local')->download(
-            $recado->anexo,
-            $recado->anexo_nome
-        );
+    return response()->json($recados);
     }
 }
