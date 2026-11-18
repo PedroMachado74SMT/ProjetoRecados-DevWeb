@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Recado;
+use App\Http\Requests\AnexoRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RecadoController extends Controller
 {
@@ -19,8 +21,8 @@ class RecadoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'titulo' => 'required|max:255',
-            'descricao' => 'required'
+            'titulo' => 'required|string|max:255',
+            'descricao' => 'required|string|max:5000'
         ]);
 
         $recado = Recado::create([
@@ -38,8 +40,8 @@ class RecadoController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'titulo' => 'required|max:255',
-            'descricao' => 'required'
+            'titulo' => 'required|string|max:255',
+            'descricao' => 'required|string|max:5000'
         ]);
 
         $recado = Recado::where('id', $id)
@@ -75,10 +77,81 @@ class RecadoController extends Controller
             ], 404);
         }
 
+        if ($recado->anexo) {
+            Storage::disk('local')->delete($recado->anexo);
+        }
+
         $recado->delete();
 
         return response()->json([
             'message' => 'Recado removido'
         ]);
+    }
+
+    // Upload do anexo
+    public function uploadAnexo(AnexoRequest $request, $id)
+    {
+        $recado = Recado::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$recado) {
+            return response()->json([
+                'message' => 'Recado não encontrado.'
+            ], 404);
+        }
+
+        $arquivo = $request->file('anexo');
+
+        $caminho = $arquivo->store('anexos', 'local');
+
+        if (!$caminho) {
+            return response()->json([
+                'message' => 'Erro ao armazenar o anexo.'
+            ], 500);
+        }
+
+        $anexoAntigo = $recado->anexo;
+
+        $recado->update([
+            'anexo' => $caminho,
+            'anexo_nome' => $arquivo->getClientOriginalName(),
+            'anexo_tipo' => $arquivo->getMimeType(),
+            'anexo_tamanho' => $arquivo->getSize()
+        ]);
+
+        if ($anexoAntigo) {
+            Storage::disk('local')->delete($anexoAntigo);
+        }
+
+        return response()->json([
+            'message' => 'Anexo enviado com sucesso.',
+            'recado' => $recado
+        ]);
+    }
+
+    // Download do anexo
+    public function downloadAnexo(Request $request, $id)
+    {
+        $recado = Recado::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$recado || !$recado->anexo) {
+            return response()->json([
+                'message' => 'Anexo não encontrado.'
+            ], 404);
+        }
+
+        if (!Storage::disk('local')->exists($recado->anexo)) {
+            return response()->json([
+                'message' => 'Arquivo não encontrado.'
+            ], 404);
+        }
+
+        return Storage::disk('local')->download(
+            $recado->anexo,
+            $recado->anexo_nome
+        );
     }
 }

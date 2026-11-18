@@ -12,6 +12,10 @@ export default function Home() {
     const [loading, setLoading] = useState(false);
     const [editandoId, setEditandoId] = useState(null);
 
+    const [anexo, setAnexo] = useState(null);
+    const [inputArquivo, setInputArquivo] = useState(0);
+    const [salvando, setSalvando] = useState(false);
+
     const [temperatura, setTemperatura] = useState(null);
     const [climaLoading, setClimaLoading] = useState(true);
 
@@ -48,18 +52,23 @@ export default function Home() {
         }
     }
 
+    function limparFormulario() {
+        setTitulo("");
+        setDescricao("");
+        setEditandoId(null);
+        setAnexo(null);
+        setInputArquivo((prev) => prev + 1);
+    }
+
     async function logout() {
         try {
             await Api.post("/logout");
 
             setRecados([]);
-            setTitulo("");
-            setDescricao("");
-            setEditandoId(null);
+            limparFormulario();
             setVerificandoLogin(true);
 
             navigate("/", { replace: true });
-
         } catch (error) {
             console.error(error);
             alert("Erro ao sair da conta.");
@@ -86,25 +95,110 @@ export default function Home() {
         }
     }
 
+    function selecionarAnexo(e) {
+        const arquivo = e.target.files[0];
+
+        if (!arquivo) {
+            setAnexo(null);
+            return;
+        }
+
+        const tiposPermitidos = [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "application/pdf"
+        ];
+
+        if (!tiposPermitidos.includes(arquivo.type)) {
+            alert("Selecione uma imagem ou um PDF.");
+            e.target.value = "";
+            setAnexo(null);
+            return;
+        }
+
+        if (arquivo.size > 5 * 1024 * 1024) {
+            alert("O arquivo deve ter no máximo 5 MB.");
+            e.target.value = "";
+            setAnexo(null);
+            return;
+        }
+
+        setAnexo(arquivo);
+    }
+
+    async function enviarAnexo(id) {
+        if (!anexo) return;
+
+        const formData = new FormData();
+
+        formData.append("anexo", anexo);
+
+        await Api.post(`/recados/${id}/anexo`, formData);
+    }
+
+    async function baixarAnexo(recado) {
+        try {
+            const response = await Api.get(
+                `/recados/${recado.id}/anexo`,
+                {
+                    responseType: "blob"
+                }
+            );
+
+            const url = window.URL.createObjectURL(response.data);
+
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = recado.anexo_nome || "anexo";
+
+            document.body.appendChild(link);
+
+            link.click();
+            link.remove();
+
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+            }, 1000);
+
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao baixar o anexo.");
+        }
+    }
+
     async function criarRecado() {
         if (!titulo || !descricao) {
             alert("Preencha título e descrição");
             return;
         }
 
+        setSalvando(true);
+
         try {
-            await Api.post("/recados", {
+            const response = await Api.post("/recados", {
                 titulo,
                 descricao
             });
 
-            setTitulo("");
-            setDescricao("");
+            const id = response.data.recado.id;
+
+            try {
+                await enviarAnexo(id);
+                limparFormulario();
+            } catch (error) {
+                setEditandoId(id);
+                alert("Recado criado, mas o anexo não foi enviado. Tente salvar novamente.");
+            }
 
             await carregarRecados();
+
         } catch (error) {
             console.error(error);
             alert("Erro ao criar recado");
+        } finally {
+            setSalvando(false);
         }
     }
 
@@ -114,20 +208,28 @@ export default function Home() {
             return;
         }
 
+        setSalvando(true);
+
         try {
             await Api.put(`/recados/${editandoId}`, {
                 titulo,
                 descricao
             });
 
-            setTitulo("");
-            setDescricao("");
-            setEditandoId(null);
+            try {
+                await enviarAnexo(editandoId);
+                limparFormulario();
+            } catch (error) {
+                alert("Texto atualizado, mas o anexo não foi enviado.");
+            }
 
             await carregarRecados();
+
         } catch (error) {
             console.error(error);
             alert("Erro ao editar recado");
+        } finally {
+            setSalvando(false);
         }
     }
 
@@ -135,6 +237,8 @@ export default function Home() {
         setTitulo(recado.titulo);
         setDescricao(recado.descricao);
         setEditandoId(recado.id);
+        setAnexo(null);
+        setInputArquivo((prev) => prev + 1);
     }
 
     async function deletarRecado(id) {
@@ -144,6 +248,11 @@ export default function Home() {
             setRecados((prev) =>
                 prev.filter((recado) => recado.id !== id)
             );
+
+            if (editandoId === id) {
+                limparFormulario();
+            }
+
         } catch (error) {
             console.error(error);
             alert("Erro ao deletar recado");
@@ -202,6 +311,8 @@ export default function Home() {
                     className="input"
                     placeholder="Título"
                     value={titulo}
+                    maxLength={255}
+                    disabled={salvando}
                     onChange={(e) => setTitulo(e.target.value)}
                 />
 
@@ -209,14 +320,41 @@ export default function Home() {
                     className="input textarea"
                     placeholder="Descrição"
                     value={descricao}
+                    maxLength={5000}
+                    disabled={salvando}
                     onChange={(e) => setDescricao(e.target.value)}
                 />
 
+                <div className="anexo-form">
+                    <label>Anexo (opcional)</label>
+
+                    <input
+                        key={inputArquivo}
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,.pdf"
+                        disabled={salvando}
+                        onChange={selecionarAnexo}
+                    />
+
+                    <small>
+                        Imagens ou PDF — máximo de 5 MB.
+                    </small>
+
+                    {editandoId && (
+                        <small>
+                            Selecionar um novo arquivo substitui o anexo anterior.
+                        </small>
+                    )}
+                </div>
+
                 <button
                     className="primary-button"
+                    disabled={salvando}
                     onClick={editandoId ? editarRecado : criarRecado}
                 >
-                    {editandoId
+                    {salvando
+                        ? "Salvando..."
+                        : editandoId
                         ? "Salvar Alterações"
                         : "Adicionar Recado"}
                 </button>
@@ -224,11 +362,8 @@ export default function Home() {
                 {editandoId && (
                     <button
                         className="cancel-button"
-                        onClick={() => {
-                            setTitulo("");
-                            setDescricao("");
-                            setEditandoId(null);
-                        }}
+                        disabled={salvando}
+                        onClick={limparFormulario}
                     >
                         Cancelar edição
                     </button>
@@ -269,9 +404,29 @@ export default function Home() {
                                     ).toLocaleString("pt-BR")}
                                 </small>
 
+                                {recado.anexo && (
+                                    <div className="anexo-card">
+                                        <span>
+                                            📎 {recado.anexo_nome}
+                                        </span>
+
+                                        <small>
+                                            {(recado.anexo_tamanho / 1024).toFixed(1)} KB
+                                        </small>
+
+                                        <button
+                                            className="download-button"
+                                            onClick={() => baixarAnexo(recado)}
+                                        >
+                                            Baixar anexo
+                                        </button>
+                                    </div>
+                                )}
+
                                 <div className="recado-actions">
                                     <button
                                         className="edit-button"
+                                        disabled={salvando}
                                         onClick={() =>
                                             iniciarEdicao(recado)
                                         }
@@ -281,6 +436,7 @@ export default function Home() {
 
                                     <button
                                         className="delete-button"
+                                        disabled={salvando}
                                         onClick={() =>
                                             deletarRecado(recado.id)
                                         }

@@ -9,7 +9,11 @@ class Recado extends Model
     protected $fillable = [
         'titulo',
         'descricao',
-        'user_id'
+        'user_id',
+        'anexo',
+        'anexo_nome',
+        'anexo_tipo',
+        'anexo_tamanho'
     ];
 
     public function user()

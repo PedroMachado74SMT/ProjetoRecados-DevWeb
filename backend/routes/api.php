@@ -24,4 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::delete('/recados/{id}', [RecadoController::class, 'destroy']);
 
+    // Anexos
+    Route::post('/recados/{id}/anexo', [RecadoController::class, 'uploadAnexo']);
+
+    Route::get('/recados/{id}/anexo', [RecadoController::class, 'downloadAnexo']);
+
 });
