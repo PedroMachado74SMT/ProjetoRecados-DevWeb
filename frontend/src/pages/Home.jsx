@@ -15,13 +15,18 @@ export default function Home() {
     const [temperatura, setTemperatura] = useState(null);
     const [climaLoading, setClimaLoading] = useState(true);
 
+    const [verificandoLogin, setVerificandoLogin] = useState(true);
+
     async function verificarLogin() {
         try {
             await Api.get("/user");
+
+            setVerificandoLogin(false);
+
             carregarRecados();
             carregarClima();
         } catch (error) {
-            navigate("/");
+            navigate("/", { replace: true });
         }
     }
 
@@ -46,11 +51,19 @@ export default function Home() {
     async function logout() {
         try {
             await Api.post("/logout");
+
+            setRecados([]);
+            setTitulo("");
+            setDescricao("");
+            setEditandoId(null);
+            setVerificandoLogin(true);
+
+            navigate("/", { replace: true });
+
         } catch (error) {
             console.error(error);
+            alert("Erro ao sair da conta.");
         }
-
-        navigate("/");
     }
 
     async function carregarRecados() {
@@ -64,7 +77,7 @@ export default function Home() {
             console.error(error);
 
             if (error.response?.status === 401) {
-                navigate("/");
+                navigate("/", { replace: true });
             } else {
                 alert("Erro ao carregar recados");
             }
@@ -140,6 +153,14 @@ export default function Home() {
     useEffect(() => {
         verificarLogin();
     }, []);
+
+    if (verificandoLogin) {
+        return (
+            <div className="home-container">
+                <p>Verificando login...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="home-container">
