@@ -19,6 +19,9 @@ export default function Register() {
         }
 
         try {
+
+            await Api.get("/../sanctum/csrf-cookie");
+
             await Api.post("/register", {
                 name: nome,
                 email,

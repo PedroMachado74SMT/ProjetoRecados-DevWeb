@@ -38,7 +38,8 @@ services:
       SESSION_HTTP_ONLY: "true"
       SESSION_SAME_SITE: lax
 
-      SANCTUM_STATEFUL_DOMAINS: localhost:5173
+      SANCTUM_STATEFUL_DOMAINS: "localhost:5173,${CODESPACE_NAME:-local}-5173.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}"
+
     volumes:
       - anexos_data:/app/storage/app/private
     depends_on:
@@ -53,6 +54,8 @@ services:
     restart: unless-stopped
     ports:
       - "5173:5173"
+    environment:
+      BACKEND_URL: http://backend:8000
     depends_on:
       - backend
 

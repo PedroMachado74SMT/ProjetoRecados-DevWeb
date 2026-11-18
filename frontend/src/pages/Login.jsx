@@ -15,7 +15,7 @@ export default function Login() {
 
         try {
 
-            await Api.get("http://localhost:8000/sanctum/csrf-cookie");
+            await Api.get("/../sanctum/csrf-cookie");
 
             await Api.post("/login", {
                 email,
