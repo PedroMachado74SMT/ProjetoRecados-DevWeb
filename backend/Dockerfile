@@ -13,6 +13,8 @@ WORKDIR /app
 
 COPY . .
 
+RUN touch /app/.env
+
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 RUN chmod -R 775 storage bootstrap/cache
