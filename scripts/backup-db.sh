@@ -2,23 +2,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Executar na raiz do projeto
+# Ir para a raiz do projeto
 cd "$(dirname "$0")/.."
 
-# Criar pasta para os backups
+# Criar pasta dos backups
 mkdir -p backups
 
-# Nome do arquivo com data e hora
 DATA=$(date +"%Y-%m-%d_%H-%M-%S")
 ARQUIVO="backups/recados_$DATA.sql"
 
 echo "Iniciando backup do MySQL..."
 
-if docker compose exec -T mysql sh -c \
+# Exportar o banco de dados
+if ! docker compose exec -T mysql sh -c \
   'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --single-transaction --no-tablespaces recados' > "$ARQUIVO"; then
-    echo "Backup criado: $ARQUIVO"
-else
     rm -f "$ARQUIVO"
-    echo "Erro ao criar backup."
+    echo "ERRO: não foi possível criar o backup."
     exit 1
 fi
+
+echo "Verificando o backup..."
+
+# Conferir se o arquivo não está vazio
+if [[ ! -s "$ARQUIVO" ]]; then
+    echo "ERRO: o arquivo de backup está vazio."
+    rm -f "$ARQUIVO"
+    exit 1
+fi
+
+# Conferir as tabelas principais
+for TABELA in users recados; do
+    if ! grep -Fq "CREATE TABLE \`$TABELA\`" "$ARQUIVO"; then
+        echo "ERRO: tabela $TABELA não encontrada no backup."
+        rm -f "$ARQUIVO"
+        exit 1
+    fi
+done
+
+echo "Backup gerado e estrutura básica verificada!"
+echo "Arquivo: $ARQUIVO"
