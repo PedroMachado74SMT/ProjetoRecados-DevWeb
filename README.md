@@ -1,303 +1,256 @@
 # 📌 Projeto Recados
 
-Projeto Full Stack desenvolvido para a disciplina de Desenvolvimento Web III da FATEC.
+Sistema Full Stack desenvolvido para a disciplina de **Desenvolvimento Web III da FATEC**.
 
-O sistema permite que usuários realizem cadastro, login e gerenciamento de recados pessoais através de uma API REST desenvolvida em Laravel e um Front-end em React.
+A aplicação permite cadastrar usuários, realizar login e gerenciar recados pessoais com anexos. Também possui um painel administrativo para moderação dos recados.
 
----
+## 🛠 Tecnologias utilizadas
 
-# 🛠 Tecnologias Utilizadas
+**Frontend:** React, Vite, Axios e React Router DOM.
 
-## Front-end
+**Backend:** Laravel 13, PHP 8.4 e Laravel Sanctum.
 
-- React
-- Vite
-- Axios
-- React Router DOM
+**Banco de dados:** MySQL 8.0.
 
-## Back-end
+**Infraestrutura:** Docker, Docker Compose e volumes persistentes.
 
-- Laravel 13
-- Laravel Sanctum
-- PHP 8.5
+## ✨ Funcionalidades
 
-## Banco de Dados
+- Cadastro, login e logout de usuários.
+- Autenticação por sessão com Laravel Sanctum.
+- CRUD de recados pessoais.
+- Upload de um anexo por recado.
+- Download de anexos privados.
+- Suporte a JPG, JPEG, PNG, WEBP e PDF.
+- Limite de 5 MB por anexo.
+- Controle de acesso por papéis (`user` e `admin`).
+- Painel administrativo para visualizar todos os recados.
+- Integração com a API pública Open-Meteo.
+- Proteção de rotas, senhas com hash e validação de entradas.
 
-- MySQL (XAMPP)
+## 📂 Estrutura do projeto
 
----
-
-# 📂 Estrutura do Projeto
-
-```
-ProjetoRecados/
-│
+```text
+ProjetoRecados-DevWeb/
 ├── backend/
+│   ├── app/
+│   ├── database/
+│   ├── routes/
+│   ├── tests/
+│   └── Dockerfile
 ├── frontend/
+│   ├── src/
+│   └── Dockerfile
+├── docker-compose.yml
+├── .env.example
 └── README.md
 ```
 
----
+## 🚀 Instalação com Docker
 
-# 📋 Pré-requisitos
+### Pré-requisitos
 
-Antes de executar o projeto é necessário possuir instalado:
-
-- XAMPP (Apache e MySQL)
-- PHP 8.5 (caso não utilize o PHP do XAMPP)
-- Composer
-- Node.js
-- npm
 - Git
+- Docker com suporte ao Docker Compose
 
----
+Não é necessário instalar PHP, Composer, Node.js ou MySQL separadamente para utilizar o Docker.
 
-# 📥 Clonando o Projeto
-
-```bash
-git clone https://github.com/SEU-USUARIO/ProjetoRecados.git
-```
-
-Entre na pasta do projeto:
+### 1. Clonar o repositório
 
 ```bash
-cd ProjetoRecados
+git clone https://github.com/PedroMachado74SMT/ProjetoRecados-DevWeb.git
+cd ProjetoRecados-DevWeb
 ```
 
----
+### 2. Configurar as variáveis de ambiente
 
-# ⚙️ Configuração do Banco de Dados
+Crie o arquivo `.env` na raiz do projeto, utilizando `.env.example` como referência.
 
-1. Abra o **XAMPP Control Panel**.
+Configure pelo menos estas variáveis:
 
-2. Inicie o serviço **MySQL**.
-
-3. Acesse o **phpMyAdmin**:
-
-```
-http://localhost/phpmyadmin
+```dotenv
+APP_KEY=base64:COLOQUE_SUA_CHAVE_AQUI
+DB_PASSWORD=COLOQUE_UMA_SENHA_FORTE
+MYSQL_ROOT_PASSWORD=COLOQUE_OUTRA_SENHA_FORTE
 ```
 
-4. Crie um banco de dados chamado:
-
-```
-recados
-```
-
----
-
-# ⚙️ Configuração do Backend
-
-Abra um terminal.
-
-Entre na pasta:
+Para gerar uma chave de aplicação, você pode utilizar:
 
 ```bash
-cd backend
+docker run --rm php:8.4-cli php -r 'echo "base64:".base64_encode(random_bytes(32)).PHP_EOL;'
 ```
 
-Instale as dependências:
+Copie o resultado para `APP_KEY`.
+
+**Importante:** não publique o arquivo `.env` nem compartilhe suas senhas ou chave de criptografia.
+
+### 3. Iniciar a aplicação
+
+Na raiz do projeto:
 
 ```bash
-composer install
+docker compose up -d --build
 ```
 
-Caso seja necessário instalar as rotas da API:
+O Docker Compose inicia o MySQL, o Laravel e o React.
+
+As migrations são executadas automaticamente durante a inicialização do backend.
+
+### 4. Verificar os serviços
 
 ```bash
-php artisan install:api
+docker compose ps
 ```
 
-Execute as migrations:
+O MySQL e o backend possuem verificações de saúde (*healthchecks*).
 
-```bash
-php artisan migrate
-```
+### 5. Acessar o sistema
 
-Inicie o servidor Laravel:
+Frontend:
 
-```bash
-php artisan serve
-```
-
-O Backend ficará disponível em:
-
-```
-http://127.0.0.1:8000
-```
-
----
-
-# ⚛️ Configuração do Front-end
-
-Abra outro terminal.
-
-Entre na pasta:
-
-```bash
-cd frontend
-```
-
-Instale as dependências:
-
-```bash
-npm install
-```
-
-Execute:
-
-```bash
-npm run dev
-```
-
-O Front-end ficará disponível em:
-
-```
+```text
 http://localhost:5173
 ```
 
----
+Backend:
 
-# ✨ Funcionalidades
-
-## Usuários
-
-- Cadastro de usuário
-- Login
-- Logout
-- Autenticação utilizando Laravel Sanctum
-- Rotas protegidas
-
-## Recados
-
-- Cadastro de recados
-- Listagem de recados
-- Edição de recados
-- Exclusão de recados
-
----
-
-# 📌 Principais Recursos
-
-- Cadastro de usuários
-- Login seguro utilizando Token
-- Logout
-- CRUD completo de recados
-- Cada usuário possui acesso apenas aos seus próprios recados
-- API REST utilizando Laravel
-- Front-end desenvolvido em React
-
----
-
-# 🔗 Rotas da API
-
-## Usuários
-
-| Método | Endpoint |
-|---------|----------|
-| POST | /api/register |
-| POST | /api/login |
-| POST | /api/logout |
-
-## Recados
-
-| Método | Endpoint |
-|---------|----------|
-| GET | /api/recados |
-| POST | /api/recados |
-| PUT | /api/recados/{id} |
-| DELETE | /api/recados/{id} |
-
----
-
-# 🔐 Autenticação
-
-A autenticação é realizada utilizando o **Laravel Sanctum**.
-
-Após realizar o login, a API retorna um Token.
-
-Esse Token deve ser enviado nas rotas protegidas utilizando o Header:
-
-```http
-Authorization: Bearer SEU_TOKEN
+```text
+http://localhost:8000
 ```
 
----
+Cadastre um usuário pela interface para começar a utilizar o sistema.
 
-# ▶️ Primeira Execução
+## 👤 Administrador
 
-1. Abra o **XAMPP Control Panel**.
-2. Inicie o **MySQL**.
-3. Crie o banco de dados **recados** no phpMyAdmin.
-4. Abra um terminal e entre na pasta **backend**.
-5. Execute:
+Por segurança, novos usuários recebem o papel `user` por padrão.
+
+Para conceder permissão administrativa a uma conta existente, execute:
 
 ```bash
-composer install
+docker compose exec backend php artisan tinker
 ```
 
-6. Execute:
+No Tinker, substitua o endereço abaixo pelo e-mail do usuário:
+
+```php
+\App\Models\User::where('email', 'admin@exemplo.com')
+    ->update(['role' => 'admin']);
+```
+
+Digite `exit` para sair.
+
+Após entrar novamente na aplicação, esse usuário poderá acessar o painel administrativo.
+
+A permissão de administrador não pode ser escolhida livremente durante o cadastro.
+
+## 📎 Anexos
+
+Cada recado pode possuir um anexo.
+
+Formatos permitidos: JPG, JPEG, PNG, WEBP e PDF.
+
+Tamanho máximo: **5 MB**.
+
+Os arquivos ficam em armazenamento privado do Laravel, utilizando um volume persistente do Docker.
+
+O proprietário pode baixar seu próprio anexo. Administradores também podem baixar anexos de outros usuários para fins de moderação.
+
+## 🔐 Segurança
+
+A aplicação utiliza:
+
+- Laravel Sanctum com autenticação por cookies e sessões.
+- Cookies de sessão com `HttpOnly`.
+- Proteção CSRF para requisições de sessão.
+- Hash de senhas.
+- Validação de dados enviados à API.
+- Controle de acesso por usuário e administrador.
+- Consultas utilizando Eloquent.
+- Armazenamento privado de anexos.
+- Variáveis de ambiente para credenciais e chaves.
+
+O frontend não precisa armazenar tokens de autenticação no `localStorage`.
+
+## 🔗 Principais rotas da API
+
+| Método | Endpoint | Função |
+|---|---|---|
+| POST | `/api/register` | Cadastro |
+| POST | `/api/login` | Login |
+| POST | `/api/logout` | Logout |
+| GET | `/api/user` | Usuário autenticado |
+| GET | `/api/recados` | Listar recados próprios |
+| POST | `/api/recados` | Criar recado |
+| PUT | `/api/recados/{id}` | Editar recado |
+| DELETE | `/api/recados/{id}` | Excluir recado |
+| POST | `/api/recados/{id}/anexo` | Enviar anexo |
+| GET | `/api/recados/{id}/anexo` | Baixar anexo |
+| GET | `/api/admin/recados` | Listar todos os recados (admin) |
+
+As rotas protegidas exigem autenticação. A rota administrativa exige também o papel `admin`.
+
+## 🧪 Testes automatizados
+
+O backend possui testes de autenticação, permissões, recados, anexos e validação de arquivos.
+
+Para executar todos os testes:
 
 ```bash
-php artisan migrate
+docker compose exec backend php artisan test
 ```
 
-7. Execute:
+Na última execução completa realizada durante o desenvolvimento:
+
+**19 testes aprovados e 42 verificações, sem falhas.**
+
+Os testes utilizam SQLite em memória, configurado em `backend/phpunit.xml`.
+
+## 💾 Persistência dos dados
+
+O Docker Compose utiliza volumes para preservar os dados:
+
+- `mysql_data`: dados do MySQL.
+- `anexos_data`: anexos dos recados.
+
+Para parar os serviços sem remover os volumes:
 
 ```bash
-php artisan serve
+docker compose down
 ```
 
-8. Abra outro terminal e entre na pasta **frontend**.
+**Atenção:** não utilize `docker compose down -v` se desejar preservar os dados.
 
-9. Execute:
+## 🔧 Comandos úteis
+
+Verificar os containers:
 
 ```bash
-npm install
+docker compose ps
 ```
 
-10. Execute:
+Consultar os logs do backend:
 
 ```bash
-npm run dev
+docker compose logs --tail=50 backend
 ```
 
-11. Abra o navegador:
+Conferir as migrations:
 
+```bash
+docker compose exec backend php artisan migrate:status
 ```
-http://localhost:5173
+
+Reconstruir a aplicação:
+
+```bash
+docker compose up -d --build
 ```
 
-12. Cadastre um usuário.
-
-13. Faça Login.
-
-14. Utilize normalmente o sistema.
-
----
-
-# 📷 Funcionalidades Implementadas
-
-- ✅ Cadastro de Usuário
-- ✅ Login
-- ✅ Logout
-- ✅ Cadastro de Recados
-- ✅ Listagem de Recados
-- ✅ Edição de Recados
-- ✅ Exclusão de Recados
-- ✅ Autenticação com Laravel Sanctum
-- ✅ Rotas Protegidas
-- ✅ CRUD Completo
-
----
-
-# 👨‍💻 Integrantes
+## 👨‍💻 Integrantes
 
 - Maria Eduarda Silva Rocha
 - Pedro Henrique Machado Mantovani
 
----
+## 📄 Finalidade
 
-# 📄 Licença
-
-Projeto desenvolvido exclusivamente para fins acadêmicos na disciplina de Desenvolvimento Web III da FATEC.
+Projeto acadêmico desenvolvido para a disciplina de Desenvolvimento Web III da FATEC.
