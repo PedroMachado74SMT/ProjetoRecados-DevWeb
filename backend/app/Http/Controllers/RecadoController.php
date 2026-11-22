@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Recado;
 use App\Http\Requests\AnexoRequest;
+use App\Models\Recado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,18 +22,18 @@ class RecadoController extends Controller
     {
         $request->validate([
             'titulo' => 'required|string|max:255',
-            'descricao' => 'required|string|max:5000'
+            'descricao' => 'required|string|max:5000',
         ]);
 
         $recado = Recado::create([
             'titulo' => $request->titulo,
             'descricao' => $request->descricao,
-            'user_id' => $request->user()->id
+            'user_id' => $request->user()->id,
         ]);
 
         return response()->json([
             'message' => 'Recado criado',
-            'recado' => $recado
+            'recado' => $recado,
         ], 201);
     }
 
@@ -41,27 +41,27 @@ class RecadoController extends Controller
     {
         $request->validate([
             'titulo' => 'required|string|max:255',
-            'descricao' => 'required|string|max:5000'
+            'descricao' => 'required|string|max:5000',
         ]);
 
         $recado = Recado::where('id', $id)
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if (!$recado) {
+        if (! $recado) {
             return response()->json([
-                'message' => 'Recado não encontrado.'
+                'message' => 'Recado não encontrado.',
             ], 404);
         }
 
         $recado->update([
             'titulo' => $request->titulo,
-            'descricao' => $request->descricao
+            'descricao' => $request->descricao,
         ]);
 
         return response()->json([
             'message' => 'Recado atualizado com sucesso.',
-            'recado' => $recado
+            'recado' => $recado,
         ]);
     }
 
@@ -71,9 +71,9 @@ class RecadoController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if (!$recado) {
+        if (! $recado) {
             return response()->json([
-                'message' => 'Recado não encontrado.'
+                'message' => 'Recado não encontrado.',
             ], 404);
         }
 
@@ -84,7 +84,7 @@ class RecadoController extends Controller
         $recado->delete();
 
         return response()->json([
-            'message' => 'Recado removido'
+            'message' => 'Recado removido',
         ]);
     }
 
@@ -95,9 +95,9 @@ class RecadoController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
 
-        if (!$recado) {
+        if (! $recado) {
             return response()->json([
-                'message' => 'Recado não encontrado.'
+                'message' => 'Recado não encontrado.',
             ], 404);
         }
 
@@ -105,9 +105,9 @@ class RecadoController extends Controller
 
         $caminho = $arquivo->store('anexos', 'local');
 
-        if (!$caminho) {
+        if (! $caminho) {
             return response()->json([
-                'message' => 'Erro ao armazenar o anexo.'
+                'message' => 'Erro ao armazenar o anexo.',
             ], 500);
         }
 
@@ -117,7 +117,7 @@ class RecadoController extends Controller
             'anexo' => $caminho,
             'anexo_nome' => $arquivo->getClientOriginalName(),
             'anexo_tipo' => $arquivo->getMimeType(),
-            'anexo_tamanho' => $arquivo->getSize()
+            'anexo_tamanho' => $arquivo->getSize(),
         ]);
 
         if ($anexoAntigo) {
@@ -126,48 +126,49 @@ class RecadoController extends Controller
 
         return response()->json([
             'message' => 'Anexo enviado com sucesso.',
-            'recado' => $recado
+            'recado' => $recado,
         ]);
     }
 
     // Download do anexo
     public function downloadAnexo(Request $request, $id)
-{
-    $recado = Recado::find($id);
+    {
+        $recado = Recado::find($id);
 
-    if (!$recado || !$recado->anexo) {
-        return response()->json([
-            'message' => 'Anexo não encontrado.'
-        ], 404);
+        if (! $recado || ! $recado->anexo) {
+            return response()->json([
+                'message' => 'Anexo não encontrado.',
+            ], 404);
+        }
+
+        if (
+            ! $request->user()->isAdmin() &&
+            $recado->user_id != $request->user()->id
+        ) {
+            return response()->json([
+                'message' => 'Acesso negado.',
+            ], 403);
+        }
+
+        if (! Storage::disk('local')->exists($recado->anexo)) {
+            return response()->json([
+                'message' => 'Arquivo não encontrado.',
+            ], 404);
+        }
+
+        return Storage::disk('local')->download(
+            $recado->anexo,
+            $recado->anexo_nome
+        );
     }
 
-    if (
-        !$request->user()->isAdmin() &&
-        $recado->user_id != $request->user()->id
-    ) {
-        return response()->json([
-            'message' => 'Acesso negado.'
-        ], 403);
-    }
-
-    if (!Storage::disk('local')->exists($recado->anexo)) {
-        return response()->json([
-            'message' => 'Arquivo não encontrado.'
-        ], 404);
-    }
-
-    return Storage::disk('local')->download(
-        $recado->anexo,
-        $recado->anexo_nome
-    );
-}
     // Listar todos os recados (administrador)
     public function adminIndex()
     {
-    $recados = Recado::with('user:id,name,email')
-        ->latest()
-        ->get();
+        $recados = Recado::with('user:id,name,email')
+            ->latest()
+            ->get();
 
-    return response()->json($recados);
+        return response()->json($recados);
     }
 }

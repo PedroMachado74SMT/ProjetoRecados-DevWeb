@@ -13,7 +13,7 @@ class Recado extends Model
         'anexo',
         'anexo_nome',
         'anexo_tipo',
-        'anexo_tamanho'
+        'anexo_tamanho',
     ];
 
     public function user()

@@ -23,7 +23,7 @@ return new class extends Migration
                 'anexo',
                 'anexo_nome',
                 'anexo_tipo',
-                'anexo_tamanho'
+                'anexo_tamanho',
             ]);
         });
     }

@@ -14,7 +14,7 @@ class AnexoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'anexo' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:5120'
+            'anexo' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
         ];
     }
 
@@ -24,7 +24,7 @@ class AnexoRequest extends FormRequest
             'anexo.required' => 'Selecione um arquivo.',
             'anexo.file' => 'O arquivo enviado é inválido.',
             'anexo.mimes' => 'Apenas imagens e PDFs são permitidos.',
-            'anexo.max' => 'O arquivo deve ter no máximo 5 MB.'
+            'anexo.max' => 'O arquivo deve ter no máximo 5 MB.',
         ];
     }
 }

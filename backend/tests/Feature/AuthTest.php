@@ -91,19 +91,17 @@ class AuthTest extends TestCase
         $this->assertGuest();
     }
 
-    
-public function test_usuario_pode_fazer_logout(): void
+    public function test_usuario_pode_fazer_logout(): void
     {
         $usuario = User::factory()->create();
 
         $response = $this->actingAs($usuario, 'web')
-        ->postJson('/api/logout');
+            ->postJson('/api/logout');
 
         $response->assertStatus(200);
 
         $this->assertGuest('web');
     }
-
 
     public function test_visitante_nao_pode_acessar_recados(): void
     {

@@ -15,7 +15,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6'
+            'password' => 'required|min:6',
         ]);
 
         $user = User::create([
@@ -30,7 +30,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Usuário cadastrado com sucesso!',
-            'user' => $user
+            'user' => $user,
         ], 201);
     }
 
@@ -39,14 +39,14 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
         ]);
 
         $credentials = $request->only('email', 'password');
 
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             return response()->json([
-                'message' => 'E-mail ou senha inválidos.'
+                'message' => 'E-mail ou senha inválidos.',
             ], 401);
         }
 
@@ -54,20 +54,20 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login realizado!',
-            'user' => Auth::user()
+            'user' => Auth::user(),
         ]);
     }
 
     // Logout
-public function logout(Request $request)
-{
-    Auth::guard('web')->logout();
+    public function logout(Request $request)
+    {
+        Auth::guard('web')->logout();
 
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-    return response()->json([
-        'message' => 'Logout realizado com sucesso!'
+        return response()->json([
+            'message' => 'Logout realizado com sucesso!',
         ], 200);
     }
 }
